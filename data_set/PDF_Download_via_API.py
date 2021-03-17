@@ -1,3 +1,8 @@
+
+"""
+This file downloads the PDF files of a document list in a JSON file from the CORE collection via their API.
+"""
+
 # imports
 
 import re
@@ -12,15 +17,15 @@ from collections import Counter
 from pathlib import Path
 
 # read .json file from CORE collection
-data_df_cyrr = pd.read_json('_coredata/core_all_cyr.jsonl', lines=True)
+data_df_cyrr = pd.read_json('_coredata/CORE.jsonl', lines=True)
 
 ### API Download Section - Functions
 
 # Download function
-def download_file(download_url , name, item_range):
+def downloadFile(download_url , name, item_range):
     
     # directory check 
-    path = '_API_pdf_download/Core_All_Cyr/'+str(item_range)
+    path = '_API_pdf_download/CORE/'+str(item_range)
     Path(path).mkdir(parents=True, exist_ok=True)
     path = path+'/'+name
     
@@ -31,10 +36,10 @@ def download_file(download_url , name, item_range):
     file.close()
     print("Completed")
 
-def write_error_protocol(error_indx_list, error_coreid_list, item_range):
+def writeErrorProtocol(error_indx_list, error_coreid_list, item_range):
     
     # directory check 
-    path = '_API_pdf_download/Core_All_Cyr/'+str(item_range)
+    path = '_API_pdf_download/CORE/'+str(item_range)
     Path(path).mkdir(parents=True, exist_ok=True)
     path = path+'/_Error_List_'+str(item_range)+'.txt'
     
@@ -69,7 +74,7 @@ for i in range(lower_bound ,upper_bound):
     try:
         core_id = str(data_df_cyrr.iloc[i]['coreId']) 
         url = 'https://core.ac.uk:443/api-v2/articles/get/'+ core_id +'/download/pdf?apiKey='+ api_key
-        download_file(url , 'Core_ID_' + core_id + '.pdf', item_range_path)
+        downloadFile(url , 'Core_ID_' + core_id + '.pdf', item_range_path)
         
     except (KeyboardInterrupt, SystemExit):
         print('Keyboard Interrupt triggered')
@@ -80,7 +85,7 @@ for i in range(lower_bound ,upper_bound):
         error_index_list.append(i)
         error_paper_list.append(data_df_cyrr.iloc[i]['coreId'])
 
-write_error_protocol(error_index_list, error_paper_list, item_range_path)
+writeErrorProtocol(error_index_list, error_paper_list, item_range_path)
 
 print('Size of triggered download set: '+str(upper_bound - lower_bound))
 print('Error count: '+str(len(error_index_list)))

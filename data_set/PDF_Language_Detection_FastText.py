@@ -1,3 +1,8 @@
+
+"""
+This file detects the languages of given PDF files using fastText and outputs the language occurences.
+"""
+
 ### Tool: FastText
 
 # general imports 
@@ -22,7 +27,7 @@ from pdfminer.pdfparser import PDFParser
 ### functions and PDF read-in
 
 # Method for extracting first page of PDF and converting content to String
-def extract_page_one(path):
+def extractPageOne(path):
     output_string = StringIO()
     
     with open(path, 'rb') as in_file:
@@ -36,7 +41,7 @@ def extract_page_one(path):
 
 
 
-root_path='speicher/'
+root_path='data/'
 
 # part of all papers to analyze i.e. all papers (3 => 1/3 of all papers are analyzed; 1 => whole data set)
 part_of_all_to_analyze = 1
@@ -61,7 +66,7 @@ lauf=0
 for i in range(int(len(files)/part_of_all_to_analyze)):
 
     try:
-        all_pdf_text.append(extract_page_one(file_paths[i]).getvalue())
+        all_pdf_text.append(extractPageOne(file_paths[i]).getvalue())
         if lauf%100==0:
             print(str((i/int(len(files)/part_of_all_to_analyze))*100)+'%')
     except:

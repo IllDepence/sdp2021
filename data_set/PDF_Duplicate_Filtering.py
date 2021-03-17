@@ -1,3 +1,6 @@
+"""
+This file compares given PDF document files according to their content and removes exact duplicates. 
+"""
 
 #imports
 

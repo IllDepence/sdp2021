@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+"""
+This file reads in the PDF files, the metadata .csv and labels the input data.
+A BiLSTM model is then trained on the embedded representation of the documents via five-fold cross validation.
+"""
 
 # Import packages
 
@@ -48,7 +52,7 @@ time_start = datetime.now()
 
 
 # load reduced FastText modules
-path_to_bins = 'speicher/fasttext_bins/'
+path_to_bins = 'fasttext_bins/'
 print('BEGIN')
 # import RU fasttext model in dim. version (100)
 ft_ru = fasttext.load_model(path_to_bins+'cc.ru.100.bin')
@@ -70,7 +74,7 @@ def removePassage(my_str):
     return(my_str2)
 
 # Method for extracting first page of PDF and converting content to String
-def extract_page_one(path):
+def extractPageOne(path):
     output_string = StringIO()
 
     with open(path, 'rb') as in_file:
@@ -84,7 +88,7 @@ def extract_page_one(path):
 
 
 # Method for removing array characters from author lists
-def removeAutor(my_str):
+def removeAuthor(my_str):
     my_str1 = re.sub("\['", "", my_str)
     my_str2 = re.sub("'\]", "", my_str1)
     my_str3 = re.sub("'", "", my_str2)
@@ -92,7 +96,7 @@ def removeAutor(my_str):
 
 
 # Method for extending the input & output vectors by Newlines
-def add_newlines(Tokens, Real_Tokens, y_final):
+def addNewlines(Tokens, Real_Tokens, y_final):
     y_final_REAL = []
     k = 0
     m = 0
@@ -112,7 +116,7 @@ def add_newlines(Tokens, Real_Tokens, y_final):
             for k in range(j, len(Real_Tokens)):
 
                 if Real_Tokens[k] == 'NEWLINE':
-                    y_final_REAL.append('Misc')
+                    y_final_REAL.append('Miscellaneous')
 
                 else:
                     y_final_REAL.append(y_final[i])
@@ -134,7 +138,7 @@ def add_newlines(Tokens, Real_Tokens, y_final):
 
 
 # Method for language detection in a String and vectorization using FastText
-def detect_and_vectorize(tokens_sequence):
+def detectAndVectorize(tokens_sequence):
     # input is the tokens list of ONE PAPER
     
     tokens_vectorized = []
@@ -170,13 +174,13 @@ def detect_and_vectorize(tokens_sequence):
 # Method for additional feature recognition
 punctuations = '''!()[]{};:'"\<>/?@#$%^&*«»_–~.,-'''
 
-def compute_additional_features(tokens_sequence):
+def computeAdditionalFeatures(tokens_sequence):
     # input is the tokens list of ONE PAPER
 
     tokens = tokens_sequence
     feature_upper = []
     feature_capitalized = []
-    feature_autor_format = []
+    feature_author_format = []
     feature_punctation = []
     feature_newline = []
     feature_array = []
@@ -205,11 +209,11 @@ def compute_additional_features(tokens_sequence):
 
         if tokens[i] != 'NEWLINE':
             if re.match('.\.', str(tokens[i])) != None and str(tokens[i]).isupper():
-                feature_autor_format.append(1)
+                feature_author_format.append(1)
             else:
-                feature_autor_format.append(0)
+                feature_author_format.append(0)
         else:
-            feature_autor_format.append(0)
+            feature_author_format.append(0)
 
         if tokens[i] != 'NEWLINE':
             if any((c in punctuations) for c in str(tokens[i])):
@@ -224,7 +228,7 @@ def compute_additional_features(tokens_sequence):
         else:
             feature_newline.append(0)
     df = pd.DataFrame(list(zip(feature_upper, feature_capitalized,
-                               feature_autor_format, feature_punctation, feature_newline)))
+                               feature_author_format, feature_punctation, feature_newline)))
     feature_array = df.to_numpy(copy=True)
 
     return np.array(feature_array)
@@ -234,7 +238,7 @@ print('Successful definition of methods')
 
 
 # Import Meta Data
-root_path = 'speicher/'
+root_path = 'data/'
 csv_path = root_path+'final_items_15553.csv'
 df_meta = pd.read_csv(csv_path, sep=',')
 
@@ -266,7 +270,7 @@ lauf = 0
 for i in range(int(len(files)/part_of_all_to_analyze)):
 
     try:
-        all_pdf_text.append(extract_page_one(file_paths[i]).getvalue())
+        all_pdf_text.append(extractPageOne(file_paths[i]).getvalue())
         if lauf % 100 == 0:
             print(str((i/int(len(files)/part_of_all_to_analyze))*100)+'%')
     except:
@@ -296,22 +300,22 @@ for i in range(int(len(files_core_id)/part_of_all_to_analyze)):
 
 
 # get authors for the PDFs - (PROBLEM: different format in Meta data and PDF)
-autors = []
+authors = []
 for i in range(int(len(files_core_id)/part_of_all_to_analyze)):
     index = df_meta.index[df_meta['coreId'] == int(files_core_id[i])].tolist()
     index = index[0]
-    autor_pdf = df_meta.loc[index, 'authors']
+    author_pdf = df_meta.loc[index, 'authors']
 
-    autor_pdf = removeAutor(autor_pdf).split(",")
-    for j in range(len(autor_pdf)):
+    author_pdf = removeAuthor(author_pdf).split(",")
+    for j in range(len(author_pdf)):
         # Remove excessive whitespaces
-        autor_pdf[j] = ' '.join(autor_pdf[j].split())
+        author_pdf[j] = ' '.join(author_pdf[j].split())
 
-    autors.append(autor_pdf)
+    authors.append(author_pdf)
 
 
 # Loop for labeling the text tokens
-kein_autor = []
+kein_author = []
 kein_titel = []
 error_papers = []
 ergebnis_tokens = []
@@ -338,10 +342,10 @@ for paper in range(anzahl_papers):
             teil_T = Text_pdf_0[title_index.start():title_index.end()]
             teil_E = Text_pdf_0[title_index.end()+1:len(Text_pdf_0)]
 
-            y_teil1 = np.repeat('Misc', len(teil_B.split()))
+            y_teil1 = np.repeat('Miscellaneous', len(teil_B.split()))
             y_teil2 = np.append(
                 ['B-title'], np.repeat('I-title', len(teil_T.split())-1))
-            y_teil3 = np.repeat('Misc', len(teil_E.split()))
+            y_teil3 = np.repeat('Miscellaneous', len(teil_E.split()))
 
             y_final = np.concatenate((y_teil1, y_teil2, y_teil3), axis=None)
 
@@ -352,73 +356,73 @@ for paper in range(anzahl_papers):
             Labels = y_final
             Real_Tokens = Text_pdf_0_NL.split()
 
-            autors_surname = []
-            for i in range(len(autors[paper])):
+            authors_surname = []
+            for i in range(len(authors[paper])):
                 if i % 2 == 0:
-                    autors_surname.append(autors[paper][i])
+                    authors_surname.append(authors[paper][i])
 
-            autors_surname_lower = []
-            for i in range(len(autors_surname)):
-                autors_surname_lower.append(autors_surname[i].lower())
+            authors_surname_lower = []
+            for i in range(len(authors_surname)):
+                authors_surname_lower.append(authors_surname[i].lower())
 
-            if re.match('.\.', autors[paper][1]) == None:
-                autors_forename = []
-                for i in range(len(autors[paper])):
+            if re.match('.\.', authors[paper][1]) == None:
+                authors_forename = []
+                for i in range(len(authors[paper])):
                     if i % 2 == 1:
-                        autors_forename.append(autors[paper][i].split())
-                autors_forename = list(np.concatenate(
-                    (autors_forename), axis=None))
-                autors_forename_lower = []
-                for i in range(len(autors_forename)):
-                    autors_forename_lower.append(autors_forename[i].lower())
+                        authors_forename.append(authors[paper][i].split())
+                authors_forename = list(np.concatenate(
+                    (authors_forename), axis=None))
+                authors_forename_lower = []
+                for i in range(len(authors_forename)):
+                    authors_forename_lower.append(authors_forename[i].lower())
 
-                autors_surname_lower = list(np.concatenate(
-                    (autors_forename_lower, autors_surname_lower), axis=None))
+                authors_surname_lower = list(np.concatenate(
+                    (authors_forename_lower, authors_surname_lower), axis=None))
 
             Tokens = all_pdf_text[paper].split()
             Tokens_final_lower = []
             for i in range(len(Tokens)):
                 Tokens_final_lower.append(Tokens[i].lower())
 
-            vec_autor = []
+            vec_author = []
             for token in Tokens_final_lower:
-                line = any(word in token for word in autors_surname_lower)
-                vec_autor.append(line)
+                line = any(word in token for word in authors_surname_lower)
+                vec_author.append(line)
 
-            index_autor = [i for i, e in enumerate(vec_autor) if e == True]
+            index_author = [i for i, e in enumerate(vec_author) if e == True]
 
-            if len(index_autor) > (len(autors_surname_lower)):
-                diff = len(index_autor) - len(autors_surname_lower)
+            if len(index_author) > (len(authors_surname_lower)):
+                diff = len(index_author) - len(authors_surname_lower)
                 dist = []
-                for j in range(len(index_autor)):
+                for j in range(len(index_author)):
                     dist.append(
-                        abs(index_autor[j]-y_final_REAL.index('B-title')))
+                        abs(index_author[j]-y_final_REAL.index('B-title')))
 
-                dict1 = dict(zip(dist, index_autor))
+                dict1 = dict(zip(dist, index_author))
                 dist.sort(reverse=True)
 
                 for k in range(len(dist[0:diff])):
-                    vec_autor[dict1[dist[0:diff][k]]] = False
+                    vec_author[dict1[dist[0:diff][k]]] = False
 
             for i in range(len(y_final)):
-                if vec_autor[i] == True:
-                    y_final[i] = 'autor'
+                if vec_author[i] == True:
+                    y_final[i] = 'author'
 
-            if True not in vec_autor:
-                kein_autor.append(files_core_id[paper])
+            if True not in vec_author:
+                kein_author.append(files_core_id[paper])
 
-            if re.match('.\.', autors[paper][1]) != None:
+            if re.match('.\.', authors[paper][1]) != None:
 
-                index_autor_true = [
-                    i for i, e in enumerate(vec_autor) if e == True]
-                for w in range(len(index_autor_true)):
-                    index = index_autor_true[w]
+                index_author_true = [
+                    i for i, e in enumerate(vec_author) if e == True]
+                for w in range(len(index_author_true)):
+                    index = index_author_true[w]
                     for t in range(index - 4, index + 4):
                         if re.match('.\.', Tokens_final_lower[t]) != None and Tokens[t].isupper():
-                            y_final[t] = 'autor'
+                            y_final[t] = 'author'
 
-            RealTokens_final = add_newlines(Tokens, Real_Tokens, y_final)[0]
-            y_final_REAL = add_newlines(Tokens, Real_Tokens, y_final)[1]
+            RealTokens_final = addNewlines(Tokens, Real_Tokens, y_final)[0]
+            y_final_REAL = addNewlines(Tokens, Real_Tokens, y_final)[1]
             ergebnis_label.append(y_final_REAL)
             ergebnis_tokens.append(RealTokens_final)
         except:
@@ -430,11 +434,11 @@ print('Start PDF Vectorization')
 all_pdfs_vectorized = []
 
 # load language detection module (FastText lid.176.bin)
-path_to_lang_model = root_path+'fasttext_bins/lid.176.bin'
+path_to_lang_model = 'fasttext_bins/lid.176.bin'
 fasttext_detection_model = fasttext.load_model(path_to_lang_model)
 
 for i in range(len(ergebnis_tokens)):
-    all_pdfs_vectorized.append(detect_and_vectorize(ergebnis_tokens[i]))
+    all_pdfs_vectorized.append(detectAndVectorize(ergebnis_tokens[i]))
     if i % 1000 == 0:
         print(str((i/int(len(files)/part_of_all_to_analyze))*100)+'%')
 
@@ -475,7 +479,7 @@ all_pdfs_vectorized_features = []
 
 for i in range(len(all_pdfs_vectorized)):
     pdf_vectorized_features = []
-    features_in_pdf = compute_additional_features(ergebnis_tokens[i])
+    features_in_pdf = computeAdditionalFeatures(ergebnis_tokens[i])
 
     for j in range(len(all_pdfs_vectorized[i])):
         pdf_vectorized_features.append(np.append(np.float16(
@@ -493,7 +497,7 @@ print('Dimensions of array with word vectors and features combined: ' +
 print('Start of fitting labels to 1000 length')
 
 labels_categorized = []
-label_dict = {'Misc': 0, 'B-title': 1, 'I-title': 2, 'autor': 3}
+label_dict = {'Miscellaneous': 0, 'B-title': 1, 'I-title': 2, 'Author': 3}
 
 for i in range(len(ergebnis_label)):
     transformed = [label_dict.get(n, n) for n in ergebnis_label[i]]
@@ -527,7 +531,7 @@ for train_index, test_index in kf.split(all_pdfs_vectorized_features):
     x_train, x_test = all_pdfs_vectorized_features[train_index], all_pdfs_vectorized_features[test_index]
     y_train, y_test = labels_categorized[train_index], labels_categorized[test_index]
 
-    # compute weights for each word token depending on label (Weight = 1 for Misc., Weight = 5 for B-Title, I-Title & Author labels)
+    # compute weights for each word token depending on label (Weight = 1 for Miscellaneous., Weight = 5 for B-Title, I-Title & Author labels)
     sample_weights = []
     for i in range(len(y_train)):
         text_weights = []
