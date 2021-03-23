@@ -2,13 +2,13 @@
 
 ### Contents
 
-* code for statistics of final data set
 
 * directory `data_set`
     * code for data filtering
     * code for data set building
-    * code for human readable XML
-    * code for TEIs
+    * code for generating annotated plain text
+    * code for generating TEIs
+    * code for data set statistics
 * directory `model_training_and_evaluation`
     * directory `BiLSTM`
         * code for model training
