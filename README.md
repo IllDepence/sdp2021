@@ -1,7 +1,8 @@
-# Bootstrapping Multilingual Metadata Extraction: A Showcase in Cyrillic
+# Bootstrapping Multilingual Metadata Extraction<br>A Showcase in Cyrillic
 
 Source code and evaluation details for the [SDP 2021](https://sdproc.org/2021/) paper “Bootstrapping Multilingual Metadata Extraction: A Showcase in Cyrillic.”
 
+![](https://github.com/IllDepence/sdp2021/raw/master/schematic_overview.png)
 
 ### Contents
 
