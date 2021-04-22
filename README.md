@@ -1,7 +1,9 @@
-# SDP Workshop 2021
+# Bootstrapping Multilingual Metadata Extraction: A Showcase in Cyrillic
+
+Source code and evaluation details for the [SDP 2021](https://sdproc.org/2021/) paper “Bootstrapping Multilingual Metadata Extraction: A Showcase in Cyrillic.”
+
 
 ### Contents
-
 
 * directory `data_set`
     * code for data filtering
@@ -17,6 +19,22 @@
         * code for Evaluation of vanilla Grobid
         * code for Correcting of the Grobid TEI training data
 
+
 ### Data Set
 
-Our data set can be downloaded at `<zenodo link will be provided after anonymity period>`
+Our data set can be downloaded at [zenodo.org/record/4708696](https://zenodo.org/record/4708696).
+
+
+### Cite As
+
+```
+@inproceedings{kssf-2021-cyrillic,
+    title = {{Bootstrapping Multilingual Metadata Extraction: A Showcase in Cyrillic}},
+    author = {Krause, Johan and
+              Shapiro, Igor and
+              Saier, Tarek and
+              F{\"a}rber, Michael},
+    booktitle = {Proceedings of the Second Workshop on Scholarly Document Processing},
+    year = {2021}
+}
+```
