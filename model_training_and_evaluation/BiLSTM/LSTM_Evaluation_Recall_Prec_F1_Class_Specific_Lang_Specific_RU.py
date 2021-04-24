@@ -36,6 +36,7 @@ from datetime import datetime
 
 # Keras & sklearn imports for ML Model
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras.callbacks import CSVLogger
 from keras import metrics as km
 from keras.models import Sequential
