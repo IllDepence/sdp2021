@@ -531,18 +531,6 @@ for train_index, test_index in kf.split(all_pdfs_vectorized_features):
     x_train, x_test = all_pdfs_vectorized_features[train_index], all_pdfs_vectorized_features[test_index]
     y_train, y_test = labels_categorized[train_index], labels_categorized[test_index]
 
-    # compute weights for each word token depending on label (Weight = 1 for Miscellaneous., Weight = 5 for B-Title, I-Title & Author labels)
-    sample_weights = []
-    for i in range(len(y_train)):
-        text_weights = []
-        for j in range(len(y_train[i])):
-            if y_train[i][j][0] == 1:
-                text_weights.append(1)
-            else:
-                text_weights.append(5)
-        sample_weights.append(np.array(text_weights))
-    sample_weights = np.array(sample_weights)
-
     # LSTM model evaluation
     print('\n BEGIN LSTM Model Evaluation for run #'+str(run))
 
